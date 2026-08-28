@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Raíz Tech — Prototipo de App</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&family=Work+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --musgo:#1f3a2c;
+    --musgo-2:#2c4f3a;
+    --musgo-3:#254333;
+    --humus:#3c2a1e;
+    --fibra:#c9a77c;
+    --fibra-dim:#a98a63;
+    --brote:#a8d971;
+    --brote-dark:#7fb84d;
+    --niebla:#f3efe4;
+    --terracota:#b8623f;
+    --card:#fffdf8;
+    --ink:#22301f;
+    --muted:#7a7264;
+    --line:#e4ddcb;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Work Sans', sans-serif;
+    background:
+      radial-gradient(circle at 15% 10%, #2c4f3a 0%, transparent 45%),
+      radial-gradient(circle at 85% 90%, #16281d 0%, transparent 50%),
+      var(--musgo);
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:40px 16px;
+    color:var(--ink);
+  }
+  .backdrop-label{
+    position:fixed; top:28px; left:50%; transform:translateX(-50%);
+    text-align:center; color:var(--niebla); opacity:.55;
+    font-family:'Work Sans'; font-size:12px; letter-spacing:.14em; text-transform:uppercase;
+  }
+  .backdrop-brand{
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+    text-align:center; color:var(--fibra); opacity:.5;
+    font-family:'Fraunces', serif; font-size:14px; font-style:italic;
+  }
+
+  /* ---- Phone frame ---- */
+  .phone{
+    width:390px; height:820px; max-height:92vh;
+    background:var(--humus);
+    border-radius:52px;
+    padding:14px;
+    box-shadow:0 40px 90px -20px rgba(0,0,0,.6), 0 0 0 1px rgba(201,167,124,.15);
+    position:relative;
+  }
+  .screen-frame{
+    width:100%; height:100%;
+    background:var(--niebla);
+    border-radius:38px;
+    overflow:hidden;
+    position:relative;
+    display:flex; flex-direction:column;
+  }
+  .notch{
+    position:absolute; top:14px; left:50%; transform:translateX(-50%);
+    width:120px; height:26px; background:var(--humus);
+    border-radius:20px; z-index:50;
+  }
+  .statusbar{
+    height:48px; flex:none; display:flex; align-items:center; justify-content:space-between;
+    padding:0 28px; font-family:'IBM Plex Mono'; font-size:12px; color:var(--ink); font-weight:500;
+  }
+
+  /* ---- App content area ---- */
+  .app-body{ flex:1; overflow:hidden; position:relative; }
+  .screen{
+    position:absolute; inset:0;
+    overflow-y:auto;
+    padding:4px 20px 90px 20px;
+    opacity:0; pointer-events:none;
+    transform:translateY(8px);
+    transition:opacity .28s ease, transform .28s ease;
+  }
+  .screen.active{ opacity:1; pointer-events:auto; transform:translateY(0); }
+  .screen::-webkit-scrollbar{width:0;}
+
+  h1,h2,h3{ font-family:'Fraunces', serif; margin:0; color:var(--musgo); }
+  .eyebrow{ font-family:'IBM Plex Mono'; font-size:10.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--fibra-dim); font-weight:500; }
+  p{ margin:0; line-height:1.45; }
+  .muted{ color:var(--muted); font-size:13px; }
+
+  /* ---- Bottom nav ---- */
+  .navbar{
+    position:absolute; bottom:0; left:0; right:0;
+    height:78px; background:rgba(255,253,248,.92); backdrop-filter:blur(8px);
+    border-top:1px solid var(--line);
+    display:flex; align-items:center; justify-content:space-around;
+    padding-bottom:14px; z-index:40;
+  }
+  .navbtn{
+    background:none; border:none; display:flex; flex-direction:column; align-items:center; gap:4px;
+    font-family:'Work Sans'; font-size:10.5px; color:var(--muted); cursor:pointer; padding:6px 10px;
+    font-weight:600; letter-spacing:.01em;
+  }
+  .navbtn .ic{ font-size:20px; line-height:1; filter:grayscale(1) opacity(.55); transition:filter .2s; }
+  .navbtn.active{ color:var(--musgo); }
+  .navbtn.active .ic{ filter:none; opacity:1; transform:translateY(-1px); }
+
+  /* ---- Onboarding ---- */
+  .onboard{ display:flex; flex-direction:column; height:100%; justify-content:space-between; padding:40px 26px 50px; }
+  .onboard-top{ text-align:center; margin-top:30px; }
+  .seed-mark{
+    width:74px; height:74px; margin:0 auto 22px; border-radius:50%;
+    background:linear-gradient(160deg, var(--brote), var(--musgo-2));
+    display:flex; align-items:center; justify-content:center; font-size:32px;
+    box-shadow:0 10px 24px -6px rgba(31,58,44,.4);
+  }
+  .onboard h1{ font-size:34px; color:var(--musgo); }
+  .onboard .tag{ font-family:'Fraunces'; font-style:italic; color:var(--muted); font-size:15px; margin-top:10px; }
+  .rings-deco{ display:flex; justify-content:center; gap:14px; margin:34px 0; }
+  .ring-mini{ width:54px; height:54px; }
+  .btn{
+    border:none; border-radius:16px; padding:16px; font-family:'Work Sans'; font-weight:700;
+    font-size:14.5px; cursor:pointer; width:100%; letter-spacing:.01em;
+  }
+  .btn-primary{ background:var(--musgo); color:var(--niebla); }
+  .btn-ghost{ background:transparent; color:var(--musgo); border:1.5px solid var(--musgo-2); margin-top:10px; }
+  .btn-brote{ background:var(--brote); color:var(--musgo); }
+  .btn-terracota{ background:var(--terracota); color:#fff; }
+  .btn:active{ transform:scale(.98); }
+
+  /* ---- Header on tabs ---- */
+  .tab-header{ padding:20px 0 14px; display:flex; align-items:center; justify-content:space-between; }
+  .avatar-chip{ display:flex; align-items:center; gap:10px; }
+  .avatar{
+    width:40px; height:40px; border-radius:50%; background:var(--brote);
+    display:flex; align-items:center; justify-content:center; font-size:18px; flex:none;
+    border:2px solid var(--card);
+  }
+  .icon-btn{
+    width:38px; height:38px; border-radius:12px; background:var(--card); border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center; font-size:16px; cursor:pointer; position:relative;
+  }
+  .dot-alert{ position:absolute; top:6px; right:7px; width:7px; height:7px; border-radius:50%; background:var(--terracota); border:1.5px solid var(--niebla); }
+
+  /* ---- Cards ---- */
+  .card{
+    background:var(--card); border:1px solid var(--line); border-radius:18px; padding:16px;
+  }
+  .plant-card{
+    display:flex; align-items:center; gap:14px; margin-bottom:12px; cursor:pointer;
+    transition:transform .15s;
+  }
+  .plant-card:active{ transform:scale(.98); }
+  .plant-emoji-wrap{
+    width:58px; height:58px; border-radius:16px; flex:none; display:flex; align-items:center; justify-content:center;
+    font-size:26px;
+  }
+  .plant-name{ font-family:'Fraunces'; font-weight:600; font-size:16px; color:var(--musgo); }
+  .plant-species{ font-size:12px; color:var(--muted); font-style:italic; margin-top:1px; }
+  .status-pill{
+    font-family:'IBM Plex Mono'; font-size:10px; padding:3px 8px; border-radius:20px; font-weight:500; display:inline-block; margin-top:6px;
+  }
+  .status-ok{ background:#e7f3d9; color:var(--brote-dark); }
+  .status-watch{ background:#f6ecd6; color:#9a7a2c; }
+  .status-alert{ background:#f6e0d6; color:var(--terracota); }
+
+  /* ring svg */
+  .ring-num{ font-family:'IBM Plex Mono'; font-weight:600; }
+
+  .section-title{ display:flex; align-items:center; justify-content:space-between; margin:22px 0 12px; }
+  .section-title h3{ font-size:15px; }
+  .link-sm{ font-family:'IBM Plex Mono'; font-size:10.5px; color:var(--fibra-dim); text-transform:uppercase; letter-spacing:.06em; }
+
+  /* Progress bar */
+  .bar-track{ height:8px; background:var(--line); border-radius:6px; overflow:hidden; margin-top:8px;}
+  .bar-fill{ height:100%; background:var(--brote); border-radius:6px; transition:width .5s; }
+
+  /* Challenge card */
+  .challenge-card{ margin-bottom:12px; }
+  .challenge-top{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px;}
+  .challenge-title{ font-family:'Fraunces'; font-weight:600; font-size:14.5px; color:var(--musgo); }
+  .reward-chip{ font-family:'IBM Plex Mono'; font-size:11px; background:var(--musgo); color:var(--brote); padding:3px 9px; border-radius:20px; white-space:nowrap; }
+  .reward-chip.done{ background:var(--brote); color:var(--musgo); }
+
+  /* Badges */
+  .badge-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:6px; }
+  .badge{
+    aspect-ratio:1; border-radius:16px; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:4px; background:var(--card); border:1px solid var(--line); font-size:20px;
+  }
+  .badge.locked{ opacity:.35; }
+  .badge-label{ font-size:8.5px; font-family:'Work Sans'; font-weight:600; color:var(--muted); text-align:center; padding:0 4px; }
+
+  /* Level track */
+  .level-track{ display:flex; align-items:center; margin:18px 0 6px; }
+  .level-step{ flex:1; text-align:center; position:relative; }
+  .level-dot{ width:14px; height:14px; border-radius:50%; background:var(--line); margin:0 auto 6px; border:2px solid var(--card); position:relative; z-index:2;}
+  .level-dot.filled{ background:var(--brote); }
+  .level-dot.current{ background:var(--musgo); box-shadow:0 0 0 4px rgba(31,58,44,.15); }
+  .level-line{ position:absolute; top:6px; left:-50%; width:100%; height:2px; background:var(--line); z-index:1; }
+  .level-line.filled{ background:var(--brote); }
+  .level-step:first-child .level-line{ display:none; }
+  .level-label{ font-size:9px; color:var(--muted); font-weight:600; }
+  .level-label.current{ color:var(--musgo); }
+
+  /* Community */
+  .post-card{ margin-bottom:14px; }
+  .post-head{ display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+  .post-user{ font-weight:700; font-size:13px; color:var(--ink); }
+  .post-time{ font-size:11px; color:var(--muted); }
+  .post-media{
+    height:150px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:48px;
+    margin:10px 0;
+  }
+  .post-actions{ display:flex; gap:16px; align-items:center; margin-top:8px; }
+  .like-btn{ display:flex; align-items:center; gap:6px; background:none; border:none; cursor:pointer; font-family:'IBM Plex Mono'; font-size:12px; color:var(--muted); font-weight:500; }
+  .like-btn.liked{ color:var(--terracota); }
+
+  /* Detail screen */
+  .detail-hero{
+    height:180px; border-radius:22px; display:flex; align-items:center; justify-content:center;
+    font-size:64px; margin-top:6px; position:relative; overflow:hidden;
+  }
+  .back-btn{
+    position:absolute; top:16px; left:16px; z-index:5; width:34px; height:34px; border-radius:10px;
+    background:rgba(255,253,248,.85); border:none; display:flex; align-items:center; justify-content:center; cursor:pointer;
+  }
+  .stat-row{ display:flex; gap:10px; margin-top:14px; }
+  .stat-box{ flex:1; background:var(--card); border:1px solid var(--line); border-radius:14px; padding:12px; text-align:center; }
+  .stat-num{ font-family:'IBM Plex Mono'; font-weight:600; font-size:17px; color:var(--musgo); }
+  .stat-lbl{ font-size:9.5px; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; margin-top:2px; }
+
+  .timeline-item{ display:flex; gap:12px; padding:10px 0; border-bottom:1px solid var(--line); }
+  .timeline-item:last-child{ border:none; }
+  .tl-dot{ width:8px; height:8px; border-radius:50%; background:var(--brote); margin-top:5px; flex:none; }
+  .tl-text{ font-size:12.5px; }
+  .tl-time{ font-size:10.5px; color:var(--muted); font-family:'IBM Plex Mono'; margin-top:2px; }
+
+  /* Tip box */
+  .tip-box{ background:var(--musgo); color:var(--niebla); border-radius:16px; padding:14px 16px; margin-top:16px; }
+  .tip-box .eyebrow{ color:var(--brote); }
+  .tip-box p{ font-size:12.5px; margin-top:4px; line-height:1.5; color:#e6e3d6; }
+
+  /* Toast / modal */
+  .toast{
+    position:absolute; left:20px; right:20px; bottom:96px; z-index:60;
+    background:var(--musgo); color:var(--niebla); padding:14px 16px; border-radius:16px;
+    display:flex; align-items:center; gap:10px; font-size:12.5px; font-weight:500;
+    box-shadow:0 12px 30px -10px rgba(0,0,0,.4);
+    transform:translateY(20px); opacity:0; transition:all .3s; pointer-events:none;
+  }
+  .toast.show{ transform:translateY(0); opacity:1; }
+  .scan-pulse{ width:16px; height:16px; border-radius:50%; background:var(--brote); flex:none; animation:pulse 1s infinite; }
+  @keyframes pulse{ 0%,100%{opacity:1; transform:scale(1);} 50%{opacity:.5; transform:scale(.8);} }
+
+  .modal-overlay{
+    position:absolute; inset:0; background:rgba(20,30,22,.55); z-index:70;
+    display:flex; align-items:flex-end; opacity:0; pointer-events:none; transition:opacity .25s;
+  }
+  .modal-overlay.show{ opacity:1; pointer-events:auto; }
+  .modal-sheet{
+    width:100%; background:var(--card); border-radius:26px 26px 0 0; padding:26px 22px 34px;
+    transform:translateY(100%); transition:transform .3s;
+  }
+  .modal-overlay.show .modal-sheet{ transform:translateY(0); }
+  .modal-handle{ width:38px; height:4px; background:var(--line); border-radius:4px; margin:0 auto 18px; }
+
+  ::selection{ background:var(--brote); color:var(--musgo); }
+</style>
+</head>
+<body>
+
+<div class="backdrop-label">Prototipo interactivo — no conectado a base de datos real</div>
+
+<div class="phone">
+  <div class="notch"></div>
+  <div class="screen-frame">
+    <div class="statusbar">
+      <span id="clock">9:41</span>
+      <span>🌱 RAÍZ TECH</span>
+      <span>100%</span>
+    </div>
+
+    <div class="app-body">
+
+      <!-- ============ ONBOARDING ============ -->
+      <div class="screen active" id="screen-onboard">
+        <div class="onboard">
+          <div class="onboard-top">
+            <div class="seed-mark">🌱</div>
+            <h1>Raíz Tech</h1>
+            <div class="tag">Cuidar una planta también es<br>aprender a cuidar el futuro.</div>
+            <div class="rings-deco">
+              <svg class="ring-mini" viewBox="0 0 54 54"><circle cx="27" cy="27" r="23" fill="none" stroke="#e4ddcb" stroke-width="5"/><circle cx="27" cy="27" r="23" fill="none" stroke="#a8d971" stroke-width="5" stroke-linecap="round" stroke-dasharray="144.5" stroke-dashoffset="40" transform="rotate(-90 27 27)"/></svg>
+              <svg class="ring-mini" viewBox="0 0 54 54"><circle cx="27" cy="27" r="23" fill="none" stroke="#e4ddcb" stroke-width="5"/><circle cx="27" cy="27" r="23" fill="none" stroke="#c9a77c" stroke-width="5" stroke-linecap="round" stroke-dasharray="144.5" stroke-dashoffset="75" transform="rotate(-90 27 27)"/></svg>
+              <svg class="ring-mini" viewBox="0 0 54 54"><circle cx="27" cy="27" r="23" fill="none" stroke="#e4ddcb" stroke-width="5"/><circle cx="27" cy="27" r="23" fill="none" stroke="#b8623f" stroke-width="5" stroke-linecap="round" stroke-dasharray="144.5" stroke-dashoffset="105" transform="rotate(-90 27 27)"/></svg>
+            </div>
+          </div>
+          <div>
+            <button class="btn btn-primary" onclick="goTo('home')">Entrar a mi jardín</button>
+            <button class="btn btn-ghost" onclick="goTo('home')">Ya tengo cuenta — Iniciar sesión</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ HOME / MIS PLANTAS ============ -->
+      <div class="screen" id="screen-home">
+        <div class="tab-header">
+          <div class="avatar-chip">
+            <div class="avatar">🧑‍🌾</div>
+            <div>
+              <div style="font-family:'Fraunces';font-weight:600;font-size:15px;color:var(--musgo);">Hola, Camila</div>
+              <div class="muted" style="font-size:11px;">Nivel: Aprendiz Jardinero</div>
+            </div>
+          </div>
+          <button class="icon-btn" onclick="openNotif()">🔔<span class="dot-alert"></span></button>
+        </div>
+
+        <div class="card" style="background:var(--musgo); border:none; display:flex; align-items:center; justify-content:space-between; padding:16px 18px;">
+          <div>
+            <div class="eyebrow" style="color:var(--brote);">Racha actual</div>
+            <div style="font-family:'Fraunces';font-size:22px;color:#fff;font-weight:600;">12 días 🔥</div>
+            <div style="font-size:11px;color:#cdd8c6;margin-top:2px;">340 / 500 pts para subir de nivel</div>
+          </div>
+          <svg width="56" height="56" viewBox="0 0 56 56">
+            <circle cx="28" cy="28" r="23" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="6"/>
+            <circle cx="28" cy="28" r="23" fill="none" stroke="#a8d971" stroke-width="6" stroke-linecap="round" stroke-dasharray="144.5" stroke-dashoffset="41" transform="rotate(-90 28 28)"/>
+            <text x="28" y="32" text-anchor="middle" fill="#fff" font-size="12" font-family="IBM Plex Mono" font-weight="600">68%</text>
+          </svg>
+        </div>
+
+        <div class="section-title">
+          <h3>Mis plantas</h3>
+          <span class="link-sm">3 activas</span>
+        </div>
+
+        <div id="plant-list"></div>
+
+        <div class="section-title">
+          <h3>Retos de esta semana</h3>
+          <span class="link-sm" onclick="goTo('challenges')" style="cursor:pointer;">Ver todos →</span>
+        </div>
+        <div class="card challenge-card">
+          <div class="challenge-top">
+            <div>
+              <div class="challenge-title">Riega 3 plantas esta semana</div>
+              <div class="muted" style="margin-top:2px;">Progreso: 2 de 3 plantas regadas</div>
+            </div>
+            <span class="reward-chip">+50 pts</span>
+          </div>
+          <div class="bar-track"><div class="bar-fill" style="width:66%"></div></div>
+        </div>
+
+        <div class="tip-box">
+          <div class="eyebrow">Consejo del día</div>
+          <p>Escanea el NFC de tu matera después de regar para que la app registre el cuidado y sume puntos automáticamente.</p>
+        </div>
+      </div>
+
+      <!-- ============ PLANT DETAIL ============ -->
+      <div class="screen" id="screen-detail">
+        <div class="detail-hero" id="detail-hero" style="background:var(--musgo-2);">
+          <button class="back-btn" onclick="goTo('home')">←</button>
+          <span id="detail-emoji">🌵</span>
+        </div>
+        <div style="margin-top:14px;">
+          <div class="eyebrow" id="detail-species">ECHEVERIA ELEGANS</div>
+          <h2 id="detail-name" style="font-size:22px;margin-top:2px;">Suculenta Feliz</h2>
+        </div>
+
+        <div class="stat-row">
+          <div class="stat-box">
+            <div class="stat-num" id="detail-humidity">72%</div>
+            <div class="stat-lbl">Humedad</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-num" id="detail-lastwater">2 días</div>
+            <div class="stat-lbl">Último riego</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-num" id="detail-points">+120</div>
+            <div class="stat-lbl">Pts ganados</div>
+          </div>
+        </div>
+
+        <button class="btn btn-brote" style="margin-top:16px;" onclick="scanNFC()">📡 Escanear NFC / QR de la matera</button>
+
+        <div class="section-title">
+          <h3>Historial de cuidado</h3>
+        </div>
+        <div class="card" id="detail-timeline"></div>
+
+        <div class="tip-box" id="detail-tip">
+          <div class="eyebrow">Recomendación</div>
+          <p>Tu suculenta está en buen estado. Evita regarla de nuevo hasta que el sustrato esté completamente seco.</p>
+        </div>
+
+        <button class="btn btn-primary" style="margin-top:16px;" onclick="waterPlant()">💧 Marcar como regada</button>
+      </div>
+
+      <!-- ============ CHALLENGES ============ -->
+      <div class="screen" id="screen-challenges">
+        <div class="tab-header">
+          <h2 style="font-size:21px;">Retos</h2>
+        </div>
+        <p class="muted" style="margin-bottom:16px;">Completa retos para ganar puntos, insignias y subir de nivel.</p>
+
+        <div class="card challenge-card">
+          <div class="challenge-top">
+            <div>
+              <div class="challenge-title">Riega 3 plantas esta semana</div>
+              <div class="muted" style="margin-top:2px;">2 de 3 completadas</div>
+            </div>
+            <span class="reward-chip">+50 pts</span>
+          </div>
+          <div class="bar-track"><div class="bar-fill" style="width:66%"></div></div>
+        </div>
+
+        <div class="card challenge-card">
+          <div class="challenge-top">
+            <div>
+              <div class="challenge-title">Comparte una foto en la comunidad</div>
+              <div class="muted" style="margin-top:2px;">0 de 1 completadas</div>
+            </div>
+            <span class="reward-chip">+30 pts</span>
+          </div>
+          <div class="bar-track"><div class="bar-fill" style="width:0%"></div></div>
+        </div>
+
+        <div class="card challenge-card">
+          <div class="challenge-top">
+            <div>
+              <div class="challenge-title">Completa el tutorial de compostaje</div>
+              <div class="muted" style="margin-top:2px;">¡Completado esta semana!</div>
+            </div>
+            <span class="reward-chip done">✓ +40 pts</span>
+          </div>
+          <div class="bar-track"><div class="bar-fill" style="width:100%; background:var(--musgo-2);"></div></div>
+        </div>
+
+        <div class="section-title"><h3>Tutoriales sugeridos</h3></div>
+        <div class="card" style="display:flex; align-items:center; gap:12px; margin-bottom:10px;">
+          <div class="plant-emoji-wrap" style="background:#e7f3d9;">💧</div>
+          <div style="flex:1;">
+            <div style="font-family:'Fraunces';font-weight:600;font-size:14px;color:var(--musgo);">Cómo leer el indicador de humedad</div>
+            <div class="muted" style="font-size:11.5px;">3 min · Principiante</div>
+          </div>
+        </div>
+        <div class="card" style="display:flex; align-items:center; gap:12px;">
+          <div class="plant-emoji-wrap" style="background:#f6ecd6;">🪱</div>
+          <div style="flex:1;">
+            <div style="font-family:'Fraunces';font-weight:600;font-size:14px;color:var(--musgo);">Compostaje casero paso a paso</div>
+            <div class="muted" style="font-size:11.5px;">6 min · Intermedio</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ COMMUNITY ============ -->
+      <div class="screen" id="screen-community">
+        <div class="tab-header">
+          <h2 style="font-size:21px;">Comunidad</h2>
+          <button class="icon-btn" onclick="openShare()">➕</button>
+        </div>
+
+        <div class="card post-card">
+          <div class="post-head">
+            <div class="avatar" style="background:var(--fibra);">🧑</div>
+            <div>
+              <div class="post-user">Julián R.</div>
+              <div class="post-time">Hace 2 horas · Reto: Riego semanal</div>
+            </div>
+          </div>
+          <p style="font-size:13px;">Mi albahaca por fin se recuperó después de moverla a un lugar con más luz 🌿</p>
+          <div class="post-media" style="background:#e7f3d9;">🌿</div>
+          <div class="post-actions">
+            <button class="like-btn" onclick="toggleLike(this)">🤍 <span>18</span></button>
+            <span class="muted" style="font-size:12px;">💬 4 comentarios</span>
+          </div>
+        </div>
+
+        <div class="card post-card">
+          <div class="post-head">
+            <div class="avatar" style="background:#c9a77c;">🧑‍🎓</div>
+            <div>
+              <div class="post-user">Colegio San Marcos · 5°B</div>
+              <div class="post-time">Hace 1 día · Kit educativo</div>
+            </div>
+          </div>
+          <p style="font-size:13px;">Terminamos de armar nuestro huerto vertical con las 5 materas del kit 🏫🌱</p>
+          <div class="post-media" style="background:#f6ecd6;">🏫</div>
+          <div class="post-actions">
+            <button class="like-btn" onclick="toggleLike(this)">🤍 <span>42</span></button>
+            <span class="muted" style="font-size:12px;">💬 11 comentarios</span>
+          </div>
+        </div>
+
+        <div class="card post-card">
+          <div class="post-head">
+            <div class="avatar" style="background:#b8623f;">🧑‍🦱</div>
+            <div>
+              <div class="post-user">Marta G.</div>
+              <div class="post-time">Hace 2 días · Racha de 20 días</div>
+            </div>
+          </div>
+          <p style="font-size:13px;">20 días seguidos cuidando mis plantas sin fallar. La app me lo recuerda justo a tiempo 🔥</p>
+          <div class="post-actions">
+            <button class="like-btn" onclick="toggleLike(this)">🤍 <span>27</span></button>
+            <span class="muted" style="font-size:12px;">💬 6 comentarios</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ PROFILE ============ -->
+      <div class="screen" id="screen-profile">
+        <div class="tab-header">
+          <h2 style="font-size:21px;">Mi perfil</h2>
+          <button class="icon-btn" onclick="alert('Ajustes — pantalla no incluida en el prototipo')">⚙️</button>
+        </div>
+
+        <div class="card" style="display:flex; gap:14px; align-items:center;">
+          <div class="avatar" style="width:56px;height:56px;font-size:24px;">🧑‍🌾</div>
+          <div>
+            <div style="font-family:'Fraunces';font-weight:600;font-size:17px;color:var(--musgo);">Camila Torres</div>
+            <div class="muted">Aprendiz Jardinero · 340 pts</div>
+          </div>
+        </div>
+
+        <div class="level-track">
+          <div class="level-step">
+            <div class="level-line filled"></div>
+            <div class="level-dot filled"></div>
+            <div class="level-label">Principiante</div>
+          </div>
+          <div class="level-step">
+            <div class="level-line filled"></div>
+            <div class="level-dot current"></div>
+            <div class="level-label current">Aprendiz</div>
+          </div>
+          <div class="level-step">
+            <div class="level-line"></div>
+            <div class="level-dot"></div>
+            <div class="level-label">Jardinero</div>
+          </div>
+          <div class="level-step">
+            <div class="level-line"></div>
+            <div class="level-dot"></div>
+            <div class="level-label">Maestro</div>
+          </div>
+        </div>
+        <div class="bar-track"><div class="bar-fill" style="width:68%"></div></div>
+        <div class="muted" style="margin-top:6px; font-size:11.5px;">160 pts para llegar a "Jardinero"</div>
+
+        <div class="section-title"><h3>Insignias</h3></div>
+        <div class="badge-grid">
+          <div class="badge"><span>🌱</span><span class="badge-label">Primer riego</span></div>
+          <div class="badge"><span>🔥</span><span class="badge-label">Racha 7 días</span></div>
+          <div class="badge"><span>📚</span><span class="badge-label">1er tutorial</span></div>
+          <div class="badge locked"><span>🏆</span><span class="badge-label">Reto ganado</span></div>
+          <div class="badge locked"><span>🌍</span><span class="badge-label">Eco-experto</span></div>
+          <div class="badge locked"><span>👥</span><span class="badge-label">Comunidad activa</span></div>
+          <div class="badge locked"><span>🪴</span><span class="badge-label">5 plantas</span></div>
+          <div class="badge locked"><span>🎓</span><span class="badge-label">Maestro Jardinero</span></div>
+        </div>
+
+        <div class="section-title"><h3>Mis materas</h3></div>
+        <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div style="font-weight:600; font-size:13.5px;">3 materas vinculadas</div>
+            <div class="muted" style="font-size:11.5px;">Última sincronización: hoy, 8:40 a.m.</div>
+          </div>
+          <span class="link-sm" style="cursor:pointer;" onclick="goTo('home')">Ver →</span>
+        </div>
+      </div>
+
+    </div><!-- /app-body -->
+
+    <!-- Toast -->
+    <div class="toast" id="toast">
+      <div class="scan-pulse"></div>
+      <span id="toast-text">Conectando con la matera…</span>
+    </div>
+
+    <!-- Notification modal -->
+    <div class="modal-overlay" id="notif-modal" onclick="closeModalBg(event,'notif-modal')">
+      <div class="modal-sheet">
+        <div class="modal-handle"></div>
+        <h3 style="font-size:16px; margin-bottom:14px;">Notificaciones</h3>
+        <div class="timeline-item">
+          <div class="tl-dot" style="background:var(--terracota);"></div>
+          <div>
+            <div class="tl-text"><b>Monstera Manchas</b> necesita agua — humedad al 34%.</div>
+            <div class="tl-time">Hace 20 min</div>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="tl-dot"></div>
+          <div>
+            <div class="tl-text">Nuevo reto disponible: <b>Comparte una foto en la comunidad</b>.</div>
+            <div class="tl-time">Hace 3 h</div>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="tl-dot"></div>
+          <div>
+            <div class="tl-text">¡Ganaste la insignia <b>Racha de 7 días</b>! 🔥</div>
+            <div class="tl-time">Ayer</div>
+          </div>
+        </div>
+        <button class="btn btn-ghost" style="margin-top:14px;" onclick="closeModal('notif-modal')">Cerrar</button>
+      </div>
+    </div>
+
+    <!-- Share modal -->
+    <div class="modal-overlay" id="share-modal" onclick="closeModalBg(event,'share-modal')">
+      <div class="modal-sheet">
+        <div class="modal-handle"></div>
+        <h3 style="font-size:16px; margin-bottom:6px;">Compartir con la comunidad</h3>
+        <p class="muted" style="margin-bottom:14px;">Este reto también suma +30 pts al publicar.</p>
+        <div class="card" style="margin-bottom:14px;">
+          <textarea placeholder="Cuenta cómo va tu planta hoy…" style="width:100%; border:none; resize:none; height:60px; font-family:'Work Sans'; font-size:13px; background:transparent; outline:none;"></textarea>
+        </div>
+        <button class="btn btn-brote" onclick="publishPost()">Publicar</button>
+      </div>
+    </div>
+
+    <!-- Bottom nav -->
+    <div class="navbar">
+      <button class="navbtn active" data-tab="home" onclick="goTo('home')"><span class="ic">🏠</span>Inicio</button>
+      <button class="navbtn" data-tab="challenges" onclick="goTo('challenges')"><span class="ic">🎯</span>Retos</button>
+      <button class="navbtn" data-tab="community" onclick="goTo('community')"><span class="ic">👥</span>Comunidad</button>
+      <button class="navbtn" data-tab="profile" onclick="goTo('profile')"><span class="ic">🌿</span>Perfil</button>
+    </div>
+
+  </div>
+</div>
+
+<div class="backdrop-brand">Raíz Tech — matera bio-inteligente + app + educación</div>
+
+<script>
+  // ---------- Data ----------
+  const plants = [
+    {
+      id:'suculenta', name:'Suculenta Feliz', species:'Echeveria elegans', emoji:'🌵',
+      humidity:72, status:'ok', lastWater:'Hace 2 días', points:120, heroBg:'#2c4f3a',
+      tip:'Tu suculenta está en buen estado. Evita regarla de nuevo hasta que el sustrato esté completamente seco.',
+      history:[
+        ['Riego registrado vía NFC','Hace 2 días'],
+        ['Humedad estable (70–75%)','Hace 4 días'],
+        ['Planta agregada al sistema','Hace 3 semanas'],
+      ]
+    },
+    {
+      id:'monstera', name:'Monstera Manchas', species:'Monstera deliciosa', emoji:'🌿',
+      humidity:34, status:'alert', lastWater:'Hace 6 días', points:80, heroBg:'#7a4a2e',
+      tip:'Humedad baja. Riega hoy y escanea el NFC para confirmar el cuidado y sumar puntos.',
+      history:[
+        ['Alerta de humedad baja','Hace 20 min'],
+        ['Riego registrado vía NFC','Hace 6 días'],
+        ['Cambio de maceta','Hace 1 mes'],
+      ]
+    },
+    {
+      id:'albahaca', name:'Albahaca del Balcón', species:'Ocimum basilicum', emoji:'🌱',
+      humidity:55, status:'watch', lastWater:'Hace 3 días', points:60, heroBg:'#4a5a2e',
+      tip:'Humedad media. Revisa en 1–2 días; la albahaca prefiere riegos frecuentes y ligeros.',
+      history:[
+        ['Riego registrado vía NFC','Hace 3 días'],
+        ['Reto semanal completado','Hace 5 días'],
+        ['Planta agregada al sistema','Hace 2 semanas'],
+      ]
+    },
+  ];
+
+  const statusLabel = { ok:'Saludable', watch:'En observación', alert:'Necesita agua' };
+  const statusClass = { ok:'status-ok', watch:'status-watch', alert:'status-alert' };
+
+  function ringSVG(pct, size=52){
+    const r = (size/2)-6, c = 2*Math.PI*r;
+    const off = c - (pct/100)*c;
+    const color = pct < 40 ? '#b8623f' : pct < 60 ? '#c9a77c' : '#a8d971';
+    return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+      <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="#e4ddcb" stroke-width="5"/>
+      <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${color}" stroke-width="5" stroke-linecap="round"
+        stroke-dasharray="${c}" stroke-dashoffset="${off}" transform="rotate(-90 ${size/2} ${size/2})"/>
+      <text x="${size/2}" y="${size/2+4}" text-anchor="middle" fill="${color}" font-size="11" font-family="IBM Plex Mono" font-weight="600">${pct}%</text>
+    </svg>`;
+  }
+
+  function renderPlantList(){
+    const el = document.getElementById('plant-list');
+    el.innerHTML = plants.map(p => `
+      <div class="card plant-card" onclick="openPlant('${p.id}')">
+        <div class="plant-emoji-wrap" style="background:${p.status==='alert'?'#f6e0d6':p.status==='watch'?'#f6ecd6':'#e7f3d9'};">${p.emoji}</div>
+        <div style="flex:1;">
+          <div class="plant-name">${p.name}</div>
+          <div class="plant-species">${p.species}</div>
+          <span class="status-pill ${statusClass[p.status]}">${statusLabel[p.status]}</span>
+        </div>
+        ${ringSVG(p.humidity, 48)}
+      </div>
+    `).join('');
+  }
+  renderPlantList();
+
+  // ---------- Navigation ----------
+  function goTo(tab){
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    const target = document.getElementById('screen-' + tab);
+    if(target) target.classList.add('active');
+    document.querySelectorAll('.navbtn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  }
+
+  function openPlant(id){
+    const p = plants.find(x => x.id === id);
+    if(!p) return;
+    document.getElementById('detail-hero').style.background = p.heroBg;
+    document.getElementById('detail-emoji').textContent = p.emoji;
+    document.getElementById('detail-species').textContent = p.species.toUpperCase();
+    document.getElementById('detail-name').textContent = p.name;
+    document.getElementById('detail-humidity').textContent = p.humidity + '%';
+    document.getElementById('detail-lastwater').textContent = p.lastWater.replace('Hace ','');
+    document.getElementById('detail-points').textContent = '+' + p.points;
+    document.getElementById('detail-timeline').innerHTML = p.history.map(([t,when]) => `
+      <div class="timeline-item">
+        <div class="tl-dot"></div>
+        <div><div class="tl-text">${t}</div><div class="tl-time">${when}</div></div>
+      </div>`).join('');
+    document.getElementById('detail-tip').querySelector('p').textContent = p.tip;
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-detail').classList.add('active');
+    document.getElementById('screen-detail').dataset.current = id;
+  }
+
+  // ---------- Toast / NFC scan ----------
+  function showToast(text, ms=1800){
+    const t = document.getElementById('toast');
+    document.getElementById('toast-text').textContent = text;
+    t.classList.add('show');
+    clearTimeout(t._timer);
+    t._timer = setTimeout(()=> t.classList.remove('show'), ms);
+  }
+  function scanNFC(){
+    showToast('Conectando con la matera…', 1400);
+    setTimeout(()=> showToast('✅ Lectura confirmada: humedad actualizada', 1800), 1500);
+  }
+  function waterPlant(){
+    showToast('💧 Riego registrado — +10 pts', 1800);
+  }
+
+  // ---------- Modals ----------
+  function openNotif(){ document.getElementById('notif-modal').classList.add('show'); }
+  function openShare(){ document.getElementById('share-modal').classList.add('show'); }
+  function closeModal(id){ document.getElementById(id).classList.remove('show'); }
+  function closeModalBg(e,id){ if(e.target.id===id) closeModal(id); }
+  function publishPost(){ closeModal('share-modal'); showToast('🌿 Publicación compartida — +30 pts', 1800); }
+
+  function toggleLike(btn){
+    btn.classList.toggle('liked');
+    const span = btn.querySelector('span');
+    let n = parseInt(span.textContent, 10);
+    n = btn.classList.contains('liked') ? n+1 : n-1;
+    span.textContent = n;
+    btn.innerHTML = (btn.classList.contains('liked') ? '❤️ ' : '🤍 ') + `<span>${n}</span>`;
+  }
+
+  // ---------- Fake clock ----------
+  function tickClock(){
+    const now = new Date();
+    let h = now.getHours() % 12; if(h===0) h=12;
+    const m = String(now.getMinutes()).padStart(2,'0');
+    document.getElementById('clock').textContent = `${h}:${m}`;
+  }
+  tickClock(); setInterval(tickClock, 30000);
+</script>
+</body>
+</html>
